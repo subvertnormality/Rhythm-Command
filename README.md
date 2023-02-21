@@ -5,3 +5,5 @@ Each pattern can be edited per step (xoxo style). It's possible to select a star
 Each channel can be assigned a velocity helper. For TT TR outputs, the velocity is sent to CC 1 - 4. For midi channels, velocity is sent with the midi note on command. Velocities can be scaled and given an offset. They repeat every 16 steps.
 
 See https://docs.google.com/spreadsheets/d/1z-lZfc4HC6Y0Ka9-BgTApfB_VNcDAqefQ_KetM-Vch4/edit#gid=0 for explanation of pattern values
+
+It requires the use of a custom firmware (included - see the .hex). This firmware enables 20 scripts but reduces the overall number of scenes. Back up your scenes if you plan to use this. Existing scenes will need to be converted to the new format before they will be compatible.
