@@ -1,0 +1,285 @@
+RYTHCOMMANDER
+
+Rhythm commander is essentially a drum sequencer with some unusual features
+Firstly, it has 12 patterns. Each pattern has an adjustable length, up to 64 steps. 
+Each pattern can be sent to up to 8 channels simultaneously. Channels 1 - 4 correspond to triggers 1 - 4 on TT. 5  - 8 go to midi channels 5-8.
+Different patterns can be sent to the same channel, allowing you to mix and match patterns at different outputs.
+Each pattern can be edited per step (xoxo style). It's possible to select a starting pattern from the DR.P and DR.T banks. Patterns are scaled over 64 steps. They can be edited after selection.
+Each pattern can be assign one of four different clocks, which are received at trigger in 1 - 3. 
+The patterns progress at the speed of the selected clock.
+This allows you to have multiple patterns of differing length, driven by different clocks, going to the same output/channel. Endless possibilities
+Each channel can be assigned a velocity helper.
+For TT TR outputs, the velocity is sent to CC 1 - 4. For midi channels, velocity is sent with the midi note on command.
+Velocities can be scaled and given an offset. They repeat every 16 steps.
+
+See https://docs.google.com/spreadsheets/d/1z-lZfc4HC6Y0Ka9-BgTApfB_VNcDAqefQ_KetM-Vch4/edit#gid=0 for explanation of pattern values
+Demo : https://www.youtube.com/watch?v=IN8SePAxtZk
+
+#1				// When I as argument, deals with trigger velocities, otherwise it deals with clock one and the velocity patterns
+H * PN 0 + * - I 1 4 3 129	// Gets this channel I's velocity value and assigns it to H. I was sent with + 1 added to allow the IF conditional to work, so - 1.
+IF I: CV I H			// If I is set, assign the velocity value to the relevant TT CV out
+IF I: BRK			// If I is set, break at this point to stop the clock handler running
+L 100 111: $ 5			// Each clock 1, executes the step trigger script sending the clock number (first digit and the pattern last two digits)
+L 0 9: $ 13			// Run the velocity setter script for each channel
+A + A 1; A * A LT A 16		// Increment the velocity counter
+
+#2
+IF EQ G.FDRI 7: I 1; $ 22
+G.FDR.PR 59 1
+K + * G.FDR.N 1 5 4; J PN 1 K	// Gets the pattern number, scales it by 5 to access the pattern memory for this pattern and adds 4 to get the 8-bit representation of the "act" state - which channels are firing for this pattern
+L 0 7: G.BTN.V + I 65 BGET J I	// Sets the channel act fader to the correct state for the selected pattern.
+IF ! STATE 2: BREAK		// The clock section. Only executes if the script has been triggered from TT trig in
+L 200 211: $ 5			// Each clock 2, executes the step trigger script sending the clock number (first digit and the pattern second two digits)
+
+#3
+IF EQ G.FDR.N 0 2: G.GRP.SW 4   // Triggered by init, metronome and clock three
+G.GRP.EN 0 1; K * G.FDR.N 7 4	// Enables group 0 - the page select buttons (keeps them on essentially), gets the value of the channel fader and scales it by 4 to properly reference the velocity 
+IF I: G.FDR.N 10 PN 0 + K 2	// Sets the velocity offset fader to the velocity offset for the currently selected channel
+IF I: G.FDR.N 9 PN 0 + K 1	// Sets the velocity attenuation fader to the attenuation for the currently selected channel
+IF I: G.FDR.N 8 PN 0 K; BRK	// Sets the velocity pattern fader to the velocity pattern for the currently selected channel
+L 300 311: $ 5			// Each clock 3, executes the step trigger script sending the clock number (first digit and the pattern second two digits)
+
+#4
+IF I: G.GRP.EN 4 0		// Ignore if note called with parameter. Disable velocity ui controls
+IF I: G.GRP.EN 1 1; BRK		// Ignore if note called with parameter. Enable live mode controls
+K * G.FDR.N 7 4; H G.FDR.N 8	// Get current selected channel, scale to 4 for accessing velocity pattern data. Sets H to the selected velocity pattern
+IF ! I: PN 0 + K 1 G.FDR.N 9	// Set this channel's velocity attentuation
+IF ! I: PN 0 + K 2 G.FDR.N 10	// Set this channel's veocity offset
+IF ! I: PN 0 K H; I 1; $ 22	// Set this channel's velocity pattern
+
+#5
+K / I 100; I * % I 100 5	// Translates the clock number and the pattern number (1st digit is clock, second two is pattern)
+IF ! EQ K PN 1 + I 5: BRK	// If this pattern does not have this clock number enabled, break
+J PN 2 I; K PN 2 + I 1		// Gets the pattern length, sets it to J. Gets the current clock value for this pattern, sets it to K
+K + K 1				// Increments the clock value
+IF GT K J: K 1			// If the clock value is greater than the pattern length, set the clock value to 1
+PN 2 + I 1 K; I I; $ 6		// Store the clock value. Launch pattern 6 with the current pattern number
+
+#6
+K - PN 2 + I 1 1		// Gets the current clock, minus 1 for the division in the next line, store in K
+J PN 1 + I / K 16; K + K 1	// The 64 step values are stored in 4 16 bit numbers in the pattern store. Using the clock, calculates which 16 bit step number to retrieve
+J BREV J; J BGET J % K 16	// Gets the current step value, stores it in J
+K I				// Stores I to K for later
+IF J: I * / K 6 4; $ 11		// If the current step is 1, execute script 11 sending in a 4-scaled version of the pattern number to look up velocity values in the pattern store
+IF J: I K; $ 7			// If the current step is 1, execute script 7 with I
+
+#7				// Sends triggers to the teletype trigger outs and sets velocity to the cv outs
+K PN 1 + I 4			// Gets this pattern's act data to determine whether or not to trigger a particular channel
+IF BGET K 0: TR.P 1; I 1; $ 1   // If channel 1 act bit is 1, trigger teletype trigger 1 and set cv 1 to the velocity value stored in H
+IF BGET K 1: TR.P 2; I 2; $ 1	// If channel 2 act bit is 1, trigger teletype trigger 2 and set cv 2 to the velocity value stored in H
+IF BGET K 2: TR.P 3; I 3; $ 1	// If channel 3 act bit is 1, trigger teletype trigger 3 and set cv 3 to the velocity value stored in H
+IF BGET K 3: TR.P 4; I 4; $ 1	// If channel 4 act bit is 1, trigger teletype trigger 4 and set cv 4 to the velocity value stored in H
+P 0 1; P 1 1; P 2 1; P 3 1	// Make sure the dedupe values for the trigger channels are set to 1 (which disables the behaviour for the triggers)
+
+#8				// Executed by teletype trig in 8 for reset, channel select grid buttons, or scripts 11 and 12 to set the correct midi channel for triggers
+IF & STATE 8 ! I: $ 10; BRK	// Reset on trigger 8 if script was triggered by the teletype trig in and no I variable was passed to the script
+K + * G.FDR.N 1 5 4; J PN 1 K	// Set J to the current pattern's channel act 8-bit number
+H - G.BTNI 1; J BTOG J H	// Sets H to the value of the channel select buttons. Toggles the relevant bit in the channel act 8-bit number based on user input to the channel select buttons
+IF EQ I 0: PN 1 K J; BRK	// If the script was fired by a trigger, set the updated channel act value back in the pattern store
+I2M.CH I; PN 3 - I 23 99	// Sets i2c2midi's midi out channel. Set the active note bit to 99 for note dupe logic
+DEL 20: PN 3 - I 23 1		// After a very short amount of time, reset the active note bit for this channel
+
+#M				// Generally refreshes the UI state
+K * G.FDR.N 1 5; I K; $ 16	// Get currently selected pattern, scale it for accessing pattern data. Send value to script 16 to update xoxo gui.
+H PN 2 K; J PN 2 + K 1		// Gets the pattern length for currently selected pattern, stores in H. Gets the current clock value for the currently selected pattern, stores in J.
+L H 64: G.BTN.L I 1		// Sets steps to low brightness for those that are not included in the pattern length
+L 1 H: G.BTN.L I 3		// Sets the steps to variable brightness for steps that are included in the pattern length
+G.BTN.L J 5; I 1; $ 3		// Lights up the currently active step. Sends the scaled currently selected pattern to script 3
+G.FDR.N 6 - PN 2 + K 2 1	// Sets the clock fader to the currently selected pattern's clock value
+
+#I
+J PN 0 * G.FDR.N 7 4		// Get this channel's velocity pattern
+J / DR.V J I 1290		// Get the velocity value for I. Scale it right down to  10's to be used to set brightness on the velocity visualiser
+IF I: G.BTN.L + I 75 J; BRK	// Get the velocity visualiser brightness for step I
+A 0				// Reset logic
+L 0 10: PN 2 + * I 5 1 0	// Reset logic
+O 0				// Reset logic
+
+#N (11)
+I I; $ 12			// Fire the second half of the midi trigger logic
+K PN 1 + * / I 4 5 4		// Selects the 8-bit channel act number for this pattern
+IF BGET K 4: I - 27 P 4; $ 8	// If channel act 4 is enabled, minus the midi channel number by the dedupe value, send i2c2midi ch 27 (midi ch 5) to script 8. If deduped, the midi channel becomes 0 (off)
+IF BGET K 4: I PN 0 19; $ 14	// If channel act 4 is enabled, send the velocity value to script 14.
+IF BGET K 5: I - 28 P 5; $ 8	// If channel act 5 is enabled, minus the midi channel number by the dedupe value, send i2c2midi ch 28 (midi ch 6) to script 8
+IF BGET K 5: I PN 0 23; $ 14	// If channel act 5 is enabled, send the velocity value to script 14.
+
+#O (12)
+K PN 1 + * / I 4 5 4
+IF BGET K 6: I - 29 P 6; $ 8	// If channel act 6 is enabled, minus the midi channel number by the dedupe value, send i2c2midi ch 29 (midi ch 7) to script 8
+IF BGET K 6: I PN 0 27; $ 14	// If channel act 6 is enabled, send the velocity value to script 14.
+IF BGET K 7: I - 30 P 7; $ 8	// If channel act 7 is enabled, minus the midi channel number by the dedupe value, send i2c2midi ch 30 (midi ch 8) to script 8
+IF BGET K 7: I PN 0 31; $ 14	// If channel act 7 is enabled, send the velocity value to script 14.
+
+#Q (13)
+I * I 4; J PN 0 I		// Gets the velocity pattern for channel I from the pattern store
+K PN 0 + I 1			// Gets the velocity attenuation and stores it in K
+H / DR.V J A 129		// Uses the velocity helper using value A (current step by master clock). Scales to midi cc value.
+K / * MUL 10 H - 10 K 100	// Attenuates the velocity based on the velocity attentuation value
+H + K * PN 0 + I 2 10		// Offsets the velocity 
+PN 0 + I 3 H			// Sets the velocity value in the pattern store for later use
+
+#R (14)
+IF I: I2M.NT 48 I 100; BRK	// If the script was executed with input (by script 11 or 12), fire a note with velocity I to the currently selected midi channel
+K G.FDR.N 0; I + K 1; $ 4	// Set currently selected page to K. Execute script 4 with a value of I set.
+IF EQ K 1: G.GRP.EN 2 1; $ 19	// If we're on the pattern edit page (1), enable the pattern edit UI elements
+IF EQ K 1: G.GRP.EN 3 0		// If we're on the pattern edit page, disable the velocity page UI elements
+ELSE: G.GRP.EN 2 0		// Otherwise turn off the pattern edit UI elements
+IF EQ K 0: G.GRP.EN 3 1		// If the currently selected page is the live mode page (0), enable the channel select buttons.
+
+#S (15)				// Updates the 16-bit step values for the current pattern using the drum ops
+J + Z / I 16; K G.FDR.N 2	// Locate the correct 16-bit step value for the current step I. Assign the current algorith to K
+IF EQ K 1: H DR.T X Y C T I	// If we're on algorithm 1 (DR.T), get step value for bank X, pattern Y, pattern 2 C, using tressilo value T, for step I, set to H
+IF EQ K 0: H DR.P X Y I		// If we're on algorithm 0 (DR.V), get step value for bank X, pattern Y step I, set to H
+I - 15 % I 16; K PN 1 J		// Get the correct bit for the current step
+IF H: PN 1 J BSET K I; B 1	// If the current step is active, set the bit. Set B to 1 to ensure later algos dont overwrite
+ELSE: PN 1 J BCLR K I; B 0	// else clear the bit
+
+#T (16)				// Refreshes the xoxo interface visualising step patterns
+H I; J PN 1 H; K PN 1 + H 1	// Store I for later in H. Get 1 of 4 16-bit step data for this pattern. Get 2 of 4 16-bit step data for this pattern.
+L 1 16: G.BTN.V I BGET J O	// Run through each step value and set the sequency xoxo steps to correct values
+L 17 32: G.BTN.V I BGET K O	// Run through each step value and set the sequency xoxo steps to correct values
+J PN 1 + H 2; K PN 1 + H 3	// Get 3 of 4 16-bit step data for this pattern. Get 4 of 4 16-bit step data for this pattern.
+L 33 48: G.BTN.V I BGET J O	// Run through each step value and set the sequency xoxo steps to correct values
+L 49 64: G.BTN.V I BGET K O	// Run through each step value and set the sequency xoxo steps to correct values
+
+#U (17)				// Handles manual step edits, called by the xoxo buttons
+H EQ G.FDR.V 0 0; K G.FDR.N 1	// Set H to if we're on page 0. Set K to the currently selected pattern (not scaled for pattern bank retrieval)
+IF H: PN 2 * K 5 G.BTNI; BREAK	// If we're on page 0, scale K for pattern bank retrieval, set the length of the currently selected pattern
+J - G.BTNI 1			// Set J to 0-indexed pattern select value
+I / J 16; H % J 16		// Get the values for selecting the relevant step bit
+H BTOG PN 1 + * K 5 I H		// Toggle the relevant bit in the in the currently selected pattern's 16-bit step storage
+PN 1 + * K 5 I H		// Assign the 16-bit number back to the pattern storage
+
+#V (18)				// Pattern select UI handlers
+J + * G.FDR.N 1 5 2; K G.FDRN	// Set J to the index of the currently selected pattern's clock setting. Set last fader value to K
+K + K 1; T * + G.FDR.N 11 1 8	// Increment K to be 1-indexed. Set tressilo amount to T (factor of 8)
+IF EQ G.FDRI 6: PN 2 J K; BRK	// If the last fader pressed was the clock fader, assign this to the currently selected pattern's clock setting pattern bank value
+X G.FDR.N 3; C G.FDR.N 5	// Set X to the bank fader's current value. Set C to pattern 2 fader value.
+Z * G.FDR.N 1 5; Y G.FDR.N 4	// Set Z to the pattern select fader's current value - scaled by 6 to access pattern data. Set Y to the pattern 1 fader's current value.
+L 0 63: B 0; $ 15; $ 21		// Execute script 15 0-63. Execute script 21 for euclid and NR algos
+
+#W (19)				// Sets fader states for the algorithm pages
+K G.FDR.N 2			// Set K to algorithm number
+IF EQ K 1: G.FDR.EN 11 K	// If algo 1, enable tresillo fader
+ELSE: G.FDR.EN 11 0		// Otherwise disable tresillo fader
+IF LT K 2: G.FDR.L 4 215	// If we're on algo 0 or 1, set pattern 1 fader to 215 max value
+IF LT K 2: G.FDR.L 5 215	// If we're on algo 0 or 1, set pattern 2 fader to 215 max value
+G.FDR.EN 5 K; I K; $ 20		// Enable pattern 2 fader for all algorithms other than 0
+
+#X (20)				// Sets fader states for the algorithm pages
+IF EQ I 2: G.FDR.L 4 32		// If algorithm 2, set pattern 1 fader length to 32
+IF EQ I 2: G.FDR.L 5 32		// If algorithm 2, set pattern 2 fader length to 32
+IF EQ I 2: G.FDR.EN 3 0		// If algorithm 2, disable bank fader
+ELSE: G.FDR.EN 3 1		// Otherwise enable bank fader
+IF EQ I 3: G.FDR.L 4 32		// If algorithm 3, set pattern 1 fader length to 32
+IF EQ I 3: G.FDR.L 5 16		// If algo 3, set pattern 2 fader length to 16
+
+#Y (21)				// Execute algo 2 and 3 (euclid and NR)
+J + Z / I 16; K G.FDR.N 2	// Get relevant step pattern number, get algo number from fader
+IF EQ K 3: H NR Y X C I		// If algo 3, run numeric repetor
+IF EQ K 2: H ER Y C I		// If algo 2, run euclid
+I - 15 % I 16; K PN 1 J		
+IF & ! B H: PN 1 J BSET K I	// If the current step is active, set the bit. Don't set if previous algo wrote
+ELIF ! B: PN 1 J BCLR K I	// If previous algo hasn't writen, clear the bit
+
+#Z (22)
+K * G.FDR.N 1 5; H I		// Get the pattern access value
+L 1 16: G.BTN.L + I 75 0	// Clear the velocity visualiser 
+L 1 16: $ 10			// Set each velocity visualiser brightness
+IF H: BRK
+PN.START 1 K; PN.END 1 + K 3	// Set the pattern start and end values for the map function
+PN.MAP 1: LROT I 1		// Shift the bits left 1 step for each step pattern
+
+#P
+16	28	3	16
+1	1	1	1
+0	15	0	16
+63	18	63	63
+
+1	1284	32	1
+0	17666	16	1
+0	1284	1	1
+20	17666	0	1
+0	64	0	1
+0	16468	64	1
+0	1280	48	1
+20	16468	1	1
+2	1280	0	0
+4	32	0	0
+5	-32248	7	0
+68	8322	6	0
+3	2080	1	0
+0	-32248	0	0
+0	0	0	0
+40	3588	64	0
+3	3588	32	32
+0	3588	2	0
+0	3588	0	32
+40	128	0	0
+5	9234	64	32
+0	15140	48	32
+3	4667	1	32
+140	9234	0	32
+0	1	0	8
+0	8	16	0
+0	0	16	0
+20	0	1	32
+4	0	0	32
+0	2	0	32
+0	-1	0	32
+120	-1	0	1
+0	-1	0	32
+0	-1	0	1
+80	0	0	32
+820	-1	16	1
+0	-1	16	0
+0	-1	1	1
+0	-1	0	0
+20	0	0	32
+0	0	0	0
+0	0	0	32
+0	0	0	0
+0	0	0	32
+0	0	0	0
+0	0	64	32
+80	0	48	0
+0	0	1	32
+0	0	0	0
+0	0	0	32
+80	-1	32	0
+185	-1	16	32
+0	-1	1	0
+0	-1	0	0
+0	0	0	32
+80	2056	64	0
+0	2056	21	32
+0	2056	1	32
+0	2056	0	0
+0	16	0	32
+0	0	0	0
+0	0	0	0
+0	0	0	0
+-52	0	0	0
+
+#G
+0000001010000010
+0010001010000001
+0000001010000010
+0010001010000001
+0000000100000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+
+0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0
+0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0

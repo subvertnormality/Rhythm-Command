@@ -1,0 +1,7 @@
+Rhythm commander is essentially a drum sequencer with some unusual features. Firstly, it has 12 patterns. Each pattern has an adjustable length, up to 64 steps. Each pattern can be sent to up to 8 channels simultaneously. Channels 1 - 4 correspond to triggers 1 - 4 on TT. 5  - 8 go to midi channels 5-8. Different patterns can be sent to the same channel, allowing you to mix and match patterns at different outputs.
+
+Each pattern can be edited per step (xoxo style). It's possible to select a starting pattern from the DR.P and DR.T banks. Patterns are scaled over 64 steps. They can be edited after selection. Each pattern can be assign one of four different clocks, which are received at trigger in 1 - 3.  The patterns progress at the speed of the selected clock. This allows you to have multiple patterns of differing length, driven by different clocks, going to the same output/channel. Endless possibilities
+
+Each channel can be assigned a velocity helper. For TT TR outputs, the velocity is sent to CC 1 - 4. For midi channels, velocity is sent with the midi note on command. Velocities can be scaled and given an offset. They repeat every 16 steps.
+
+See https://docs.google.com/spreadsheets/d/1z-lZfc4HC6Y0Ka9-BgTApfB_VNcDAqefQ_KetM-Vch4/edit#gid=0 for explanation of pattern values

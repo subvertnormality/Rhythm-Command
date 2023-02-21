@@ -1,0 +1,171 @@
+RYTHCOMMANDER INIT
+
+
+
+#1
+G.GFD 2 6 6 1 4 1 2 2 18            // Inits the Clock select fader
+G.GFD 2 4 0 2 10 1 6 215 18         // Inits the step pattern 1 select fader
+G.GFD 2 5 0 3 10 1 6 215 18         // Inits the step pattern 2 select fader
+G.GFD 2 3 0 1 5 1 2 2 18	    // Inits the bank select fader
+G.GFD 2 2 12 1 4 1 2 2 19           // Inits the algorith select fader
+G.GFD 2 11 10 2 6 1 2 2 0           // Inits tressilo fader
+
+#2
+G.GBX 1 1 0 4 1 1 1 1 17 16 4       // Inits the step edit buttons
+G.GFD 1 1 0 0 12 1 2 2 0            // Inits the pattern select fader
+G.FDR 0 13 0 3 1 2 3 14             // Inits the page select fader
+G.GBX 3 65 0 1 1 1 1 2 8 8 1        // Inits chan select buttons
+G.GBT 2 75 13 3 1 1 1 10 22         // Inits offset button
+
+#3
+G.GFD 4 7 0 0 8 1 2 2 2             // Inits the channel act fader
+G.GFD 4 8 0 2 10 1 6 19 4           // Inits the velocity pattern fader
+G.GFD 4 9 0 3 10 1 2 2 4            // Inits the velocity attenuate fader
+G.GFD 4 10 0 4 10 1 2 2 4           // Inits the velocity offset fader
+G.GBX 4 76 0 7 1 1 0 1 0 16 1       // Initiates the velocity visualiser buttons
+G.GRP.EN 4 0                        // Disables group 4 by default
+
+#4
+G.RST				    // Resets the current grid
+$ 1; $ 2; $ 3                       // Executes the init scripts
+G.FDR.PR 0 1; G.FDR.PR 0 0          // Emulates a button press onto the pattern select page then live mode
+O.MAX 15; O 0; M 30; P.L 16	    // Sets needed teletype params
+P.N 3; $ 5			    // Sets default pattern to 3 for note dedupe logic. Execute fader init script
+SCENE.G 5			    // Load main scene
+
+#5
+G.GRP.SW 3; G.FDR.EN 1 1            // Switch to page select group
+G.GRP.EN 1 1			    // Enable live page controls
+
+#6
+
+#7
+
+#8
+
+#M
+G.BTN.L 99 O			    // Init patch animation
+
+#I
+M 100
+O.MAX 15; O 0			    // Sets O for the animation
+G.RST
+G.BTN 99 0 0 16 8 1 10 4	    // Animation button
+
+#N
+
+#O
+
+#Q
+
+#R
+
+#S
+
+#T
+
+#U
+
+#V
+
+#W
+
+#X
+
+#Y
+
+#Z
+
+#P
+6	4	2	3
+1	1	1	1
+0	0	0	0
+63	63	63	63
+
+1	8877	16	1
+2	10408	0	1
+30	-15850	4	1
+90	354	4	0
+1	17	4	0
+0	1	4	0
+0	-298	2	0
+70	-21880	0	0
+80	-21847	4	0
+80	9	4	0
+80	17	4	0
+80	2	0	0
+0	8192	12	0
+0	0	1	0
+80	0	0	0
+150	0	0	0
+0	0	0	0
+0	4	0	0
+80	4608	16	0
+150	95	0	0
+0	0	0	0
+80	0	0	0
+80	0	0	0
+-247	2	0	0
+80	2304	0	0
+0	0	0	0
+0	0	0	0
+0	95	0	0
+0	0	0	0
+0	2	0	0
+80	0	0	0
+150	95	0	0
+0	0	0	0
+0	0	0	0
+80	0	0	0
+150	95	0	0
+0	0	0	0
+0	0	0	0
+0	0	0	0
+70	95	0	0
+0	0	0	0
+0	0	0	0
+0	0	0	0
+0	20	0	0
+0	0	0	0
+0	0	0	0
+80	0	0	0
+0	20	0	0
+0	0	0	0
+0	0	0	0
+80	0	0	0
+80	20	0	0
+0	0	0	0
+0	0	0	0
+0	0	32	0
+80	95	0	0
+0	0	0	0
+0	0	0	0
+0	0	0	0
+0	20	0	0
+0	0	0	0
+0	0	0	0
+0	0	0	0
+0	95	1	0
+
+#G
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+
+0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
