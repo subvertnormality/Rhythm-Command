@@ -92,7 +92,7 @@ J PN 0 * G.FDR.N 7 4		// Get this channel's velocity pattern
 J / DR.V J I 1290		// Get the velocity value for I. Scale it right down to  10's to be used to set brightness on the velocity visualiser
 IF I: G.BTN.L + I 75 J; BRK	// Get the velocity visualiser brightness for step I
 A 0				// Reset logic
-L 0 10: PN 2 + * I 5 1 0	// Reset logic
+L 0 12: PN 2 + * I 5 1 0	// Reset logic
 O 0				// Reset logic
 
 #N (11)
@@ -130,7 +130,7 @@ IF EQ K 0: G.GRP.EN 3 1		// If the currently selected page is the live mode page
 J + Z / I 16; K G.FDR.N 2	// Locate the correct 16-bit step value for the current step I. Assign the current algorith to K
 IF EQ K 1: H DR.T X Y C T I	// If we're on algorithm 1 (DR.T), get step value for bank X, pattern Y, pattern 2 C, using tressilo value T, for step I, set to H
 IF EQ K 0: H DR.P X Y I		// If we're on algorithm 0 (DR.V), get step value for bank X, pattern Y step I, set to H
-I - 15 % I 16; K PN 1 J		// Get the correct bit for the current step
+I % I 16; K PN 1 J		// Get the correct bit for the current step
 IF H: PN 1 J BSET K I; B 1	// If the current step is active, set the bit. Set B to 1 to ensure later algos dont overwrite
 ELSE: PN 1 J BCLR K I; B 0	// else clear the bit
 
@@ -178,7 +178,7 @@ IF EQ I 3: G.FDR.L 5 16		// If algo 3, set pattern 2 fader length to 16
 J + Z / I 16; K G.FDR.N 2	// Get relevant step pattern number, get algo number from fader
 IF EQ K 3: H NR Y X C I		// If algo 3, run numeric repetor
 IF EQ K 2: H ER Y C I		// If algo 2, run euclid
-I - 15 % I 16; K PN 1 J		
+I % I 16; K PN 1 J		
 IF & ! B H: PN 1 J BSET K I	// If the current step is active, set the bit. Don't set if previous algo wrote
 ELIF ! B: PN 1 J BCLR K I	// If previous algo hasn't writen, clear the bit
 
