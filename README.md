@@ -7,3 +7,9 @@ Each channel can be assigned a velocity helper. For TT TR outputs, the velocity 
 See https://docs.google.com/spreadsheets/d/1z-lZfc4HC6Y0Ka9-BgTApfB_VNcDAqefQ_KetM-Vch4/edit#gid=0 for explanation of pattern values
 
 It requires the use of a custom firmware (included - see the .hex). This firmware enables 20 scripts but reduces the overall number of scenes. Back up your scenes if you plan to use this. Existing scenes will need to be converted to the new format before they will be compatible.
+
+tt04s.txt is the Launcher for the midi and trigger version of the script described above. Press any light on your grid to launch into the full scene.
+tt05s.txt is the main scene for the midi and trigger version of the script.
+
+tt06s.txt is the launcher for the midi only version of the script. It has 7 output channels from 3 - 4 and 9 - 13.
+tt07s.txt is the main scene for the midi only version of the script.

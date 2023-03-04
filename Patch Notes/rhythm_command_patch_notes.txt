@@ -84,7 +84,7 @@ K * G.FDR.N 1 5; I K; $ 16	// Get currently selected pattern, scale it for acces
 H PN 2 K; J PN 2 + K 1		// Gets the pattern length for currently selected pattern, stores in H. Gets the current clock value for the currently selected pattern, stores in J.
 L H 64: G.BTN.L I 1		// Sets steps to low brightness for those that are not included in the pattern length
 L 1 H: G.BTN.L I 3		// Sets the steps to variable brightness for steps that are included in the pattern length
-G.BTN.L J 5; I 1; $ 3		// Lights up the currently active step. Sends the scaled currently selected pattern to script 3
+G.BTN.L J 5; I 1; $ 3; $ 2	// Lights up the currently active step. Updates UI
 G.FDR.N 6 - PN 2 + K 2 1	// Sets the clock fader to the currently selected pattern's clock value
 
 #I
@@ -98,16 +98,16 @@ O 0				// Reset logic
 #N (11)
 I I; $ 12			// Fire the second half of the midi trigger logic
 K PN 1 + * / I 4 5 4		// Selects the 8-bit channel act number for this pattern
-IF BGET K 4: I - 27 P 4; $ 8	// If channel act 4 is enabled, minus the midi channel number by the dedupe value, send i2c2midi ch 27 (midi ch 5) to script 8. If deduped, the midi channel becomes 0 (off)
+IF BGET K 4: I - 21 P 4; $ 8	// If channel act 4 is enabled, minus the midi channel number by the dedupe value, send i2c2midi ch 21 (midi ch 5) to script 8. If deduped, the midi channel becomes 0 (off)
 IF BGET K 4: I PN 0 19; $ 14	// If channel act 4 is enabled, send the velocity value to script 14.
-IF BGET K 5: I - 28 P 5; $ 8	// If channel act 5 is enabled, minus the midi channel number by the dedupe value, send i2c2midi ch 28 (midi ch 6) to script 8
+IF BGET K 5: I - 22 P 5; $ 8	// If channel act 5 is enabled, minus the midi channel number by the dedupe value, send i2c2midi ch 22 (midi ch 6) to script 8
 IF BGET K 5: I PN 0 23; $ 14	// If channel act 5 is enabled, send the velocity value to script 14.
 
 #O (12)
 K PN 1 + * / I 4 5 4
-IF BGET K 6: I - 29 P 6; $ 8	// If channel act 6 is enabled, minus the midi channel number by the dedupe value, send i2c2midi ch 29 (midi ch 7) to script 8
+IF BGET K 6: I - 23 P 6; $ 8	// If channel act 6 is enabled, minus the midi channel number by the dedupe value, send i2c2midi ch 23 (midi ch 7) to script 8
 IF BGET K 6: I PN 0 27; $ 14	// If channel act 6 is enabled, send the velocity value to script 14.
-IF BGET K 7: I - 30 P 7; $ 8	// If channel act 7 is enabled, minus the midi channel number by the dedupe value, send i2c2midi ch 30 (midi ch 8) to script 8
+IF BGET K 7: I - 24 P 7; $ 8	// If channel act 7 is enabled, minus the midi channel number by the dedupe value, send i2c2midi ch 34 (midi ch 8) to script 8
 IF BGET K 7: I PN 0 31; $ 14	// If channel act 7 is enabled, send the velocity value to script 14.
 
 #Q (13)
